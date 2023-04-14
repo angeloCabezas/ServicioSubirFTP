@@ -1,0 +1,10 @@
+{
+  "Settings": {
+    "rutaFicheros": "c:\\actualiza\\maquiten\\ficheros\\",
+    "rutaProcesados": "c:\\actualiza\\maquiten\\ficheros\\procesados\\",
+    "rutaFTP": "ftp://192.168.30.28/Instalador/Raiz/Buzon/",
+    "usuarioFTP": "usuarioFTP",
+    "passwordFTP": "passwordFTP",
+    "ficheroLog": "Trazas.log"
+  }
+}

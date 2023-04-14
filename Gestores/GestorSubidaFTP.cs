@@ -1,111 +1,55 @@
-﻿using ServicioSubirFTP.Configuraciones;
-using ServicioSubirFTP.Logger;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ServicioSubirFTP.Configuraciones; //Retirar directivas innecesarias para que el codigo este más limpio
+using ServicioSubirFTP.Helper;
 
 namespace ServicioSubirFTP.Gestores
 {
     public class GestorSubidaFTP : IGestor
     {
-        readonly IConfiguraciones Configuraciones;
-        readonly IMediatorLogger Logger;
-
-        public GestorSubidaFTP(IConfiguraciones configuraciones, IMediatorLogger logger)
+        private readonly IConfiguraciones _configuraciones;//Si solo se usa para la clase poner la propiedad en privado
+        private readonly ILogger<GestorSubidaFTP> _logger;
+        //Considerarmos que el proposito de la clase es gestionar la subida, por lo que el methodo de subida de informacion FTP deberia estar en otra clase
+        //podria ser en una clase injectada o en una clase statica
+        public GestorSubidaFTP(ILogger<GestorSubidaFTP> logger,IConfiguraciones configuraciones)
         {
-            Configuraciones = configuraciones;
-            Logger = logger;
+            _configuraciones = configuraciones;
+            _logger = logger;
         }
 
         public void Handler()
         {
 
-            DirectoryInfo di = new DirectoryInfo(Configuraciones.GetrutaFicheros);
-
-            Logger.Publish(new Activity
-            {
-                Message = $"Número de ficheros a procesar {di.GetFiles().Count()}",
-                Module = nameof(Handler),
-                CreatedDate = DateTime.Now,
-                Level = ASLogLevel.Information
-            });
+            DirectoryInfo di = new DirectoryInfo(_configuraciones.GetrutaFicheros);
+            _logger.LogInformation($"Número de fiches a procesar {di.GetFiles().Count()}");
 
             foreach (var fi in di.GetFiles())
             {
-
-                // Subimos el fichero al FTP
-                Push(fi.Name);
-
-                // Movemos el fichero a procesados
-                mueveaProcesados(fi.Name);
+                SubirFicherosAlFTP(fi.Name); //En order tu evitar comentarios, una buena practica es poner un nombre que describa el methodo 
+                MueveFicherosAProcesados(fi.Name);
             }
 
         }
 
-        public void Push(string fichero)
+        public void SubirFicherosAlFTP(string fichero)
         {
-            Logger.Publish(new Activity { Message = $"Procesamos el fichero {fichero}", 
-                Module = nameof(Push), 
-                CreatedDate = DateTime.Now,
-                Level = ASLogLevel.Information});
+            _logger.LogInformation($"Procesamos el fichero {fichero}");
 
-            FtpWebRequest ftpRequest = (FtpWebRequest)WebRequest.Create(Configuraciones.GetrutaFTP + fichero);
+            string ftpRemoteFilePath = _configuraciones.GetrutaFTP + fichero;
+            string localFilePath = _configuraciones.GetrutaFicheros + fichero;
 
-            ftpRequest.Credentials = new NetworkCredential(Configuraciones.GetusuarioFTP,
-                Configuraciones.GetpasswordFTP);
-
-            // Asigna las propiedades
-            ftpRequest.Method = WebRequestMethods.Ftp.UploadFile;
-            ftpRequest.UsePassive = true;
-            ftpRequest.UseBinary = true;
-            ftpRequest.KeepAlive = false;
-
-            using (FileStream stmFile = File.OpenRead(Configuraciones.GetrutaFicheros + fichero))
-            {
-                // Obtiene el stream sobre la comunicación FTP
-                using (Stream stmFTP = ftpRequest.GetRequestStream())
-                {
-                    int cnstIntLengthBuffer = 10;
-                    byte[] arrBytBuffer = new byte[cnstIntLengthBuffer];
-                    int intRead;
-
-                    // Lee y escribe el archivo en el stream de comunicaciones
-                    while ((intRead = stmFile.Read(arrBytBuffer, 0, cnstIntLengthBuffer)) != 0)
-                        stmFTP.Write(arrBytBuffer, 0, intRead);
-                    // Cierra el stream FTP
-                    stmFTP.Close();
-                }
-                // Cierra el stream del archivo
-                stmFile.Close();
-            }
+            HelperTrasnferencias.UploadFileToFtp(ftpRemoteFilePath,_configuraciones.GetusuarioFTP,_configuraciones.GetpasswordFTP,
+                                                  localFilePath, _logger);
         }
 
-        public void mueveaProcesados(string fichero)
+        public void MueveFicherosAProcesados(string fichero)
         {
-            string origen = Configuraciones.GetrutaFicheros + fichero;
-            string destino = Configuraciones.GetrutaProcesados + fichero;
+            string origen = _configuraciones.GetrutaFicheros + fichero;
+            string destino = _configuraciones.GetrutaProcesados + fichero;
 
-            Logger.Publish(new Activity
-            {
-                Message = $"Movemos el fichero de {origen} a {destino}",
-                Module = nameof(mueveaProcesados),
-                CreatedDate = DateTime.Now,
-                Level = ASLogLevel.Information
-            });
+            _logger.LogInformation($"Movemos el fichero de {origen} a {destino}");
 
             if (File.Exists(destino))
             {
-                Logger.Publish(new Activity
-                {
-                    Message = $"Ya existía el fichero en destino de procesados {destino}. Lo borramos",
-                    Module = nameof(mueveaProcesados),
-                    CreatedDate = DateTime.Now,
-                    Level = ASLogLevel.Error
-                });
-
+                _logger.LogInformation($"Ya existía el fichero en destino de procesados {destino}. Lo borramos");
                 File.Delete(destino);
             }
 
@@ -113,13 +57,8 @@ namespace ServicioSubirFTP.Gestores
 
             if (File.Exists(origen))
             {
-                Logger.Publish(new Activity
-                {
-                    Message = $"No se ha borrado el fichero original de {origen} !!!",
-                    Module = nameof(mueveaProcesados),
-                    CreatedDate = DateTime.Now,
-                    Level = ASLogLevel.Error
-                });
+                _logger.LogWarning($"No se ha borrado el fichero original de {origen} !!!"); 
+                //Añadimos esto como un warning porque no deberia generar un trycatch en el proceso
             }
         }
     }

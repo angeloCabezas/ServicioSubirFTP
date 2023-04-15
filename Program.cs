@@ -8,10 +8,21 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         var appSettings = new AppSettings();
         hostContext.Configuration.Bind(appSettings);
-
         services.AddSingleton<AppSettings>(appSettings);
-        // Para configuraciones de rutas
-        services.AddSingleton<IConfiguraciones, ConfiguracionJson>();
+
+        // Registrar el Factory como Servicio
+        services.AddSingleton<ConfiguracionFTPFactory>();
+
+        // Crear y registrar la configuración desde un JSON
+        var ftpSettings = new FTPSettings();
+        IConfiguration config = new ConfigurationBuilder()
+                                    .AddJsonFile("ftpsettings.json")
+                                    .Build();
+        ftpSettings = config.GetRequiredSection("Settings").Get<FTPSettings>();
+
+        var configuracionFTPFactory = services.BuildServiceProvider().GetRequiredService<ConfiguracionFTPFactory>();
+        IConfiguracionFTP configuracionFTP = configuracionFTPFactory.CrearConfiguracionDesdeJson(ftpSettings);
+        services.AddSingleton<IConfiguracionFTP>(configuracionFTP);
 
         // Gestores de Proceso
         services.AddSingleton<IGestor, GestorSubidaFTP>();

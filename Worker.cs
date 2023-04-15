@@ -29,6 +29,8 @@ namespace ServicioSubirFTP
             catch (Exception ex)
             {
                 _logger.LogError($"Servicio SubirFTP Error {ex.Message}");
+                Environment.Exit(0);
+                return;
             }
             _logger.LogInformation("Servicio SubirFTP Finalizado");
         }

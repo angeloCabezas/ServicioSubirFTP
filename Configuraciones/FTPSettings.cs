@@ -1,6 +1,6 @@
 ﻿namespace ServicioSubirFTP.Configuraciones
 {
-    public sealed class Settings
+    public sealed class FTPSettings
     {
         public string rutaFicheros { get; set; }
         public string rutaProcesados { get; set; }

@@ -1,14 +1,14 @@
 ﻿namespace ServicioSubirFTP.Configuraciones
 {
-    public class ConfiguracionesHardCode : IConfiguraciones
+    public class ConfiguracionFTPHardCode : IConfiguracionFTP
     {
-        public Settings settings = new Settings();
+        public FTPSettings settings = new FTPSettings();
 
         //public const string rutaFTP = @"ftp://ftp1.es.rhenus.com/TO_RFL/"; 
         //public const string usuarioFTP = "maquiten";
         //public const string passwordFTP = "VgX3811MSc";
 
-        public ConfiguracionesHardCode()
+        public ConfiguracionFTPHardCode()
         {
             settings.rutaFicheros = @"c:\actualiza\maquiten\ficheros\";
             settings.rutaProcesados = @"c:\actualiza\maquiten\ficheros\procesados\";
@@ -17,16 +17,16 @@
             settings.passwordFTP = "maquiten";
         }
 
-        public string GetpasswordFTP => settings.passwordFTP;
+        public string PasswordFTP => settings.passwordFTP;
 
-        public string GetrutaFicheros => settings.rutaFicheros;
+        public string RutaFicherosAEnviar => settings.rutaFicheros;
 
-        public string GetrutaProcesados => settings.rutaProcesados;
+        public string RutaFicherosProcesados => settings.rutaProcesados;
 
-        public string GetrutaFTP => settings.rutaFTP;
+        public string RutaFicherosFTP => settings.rutaFTP;
 
-        public string GetusuarioFTP => settings.usuarioFTP;
-        public string GetficheroLog => settings.ficheroLog;
+        public string UsuarioFTP => settings.usuarioFTP;
+        public string FicheroLog => settings.ficheroLog;
 
     }
 }
